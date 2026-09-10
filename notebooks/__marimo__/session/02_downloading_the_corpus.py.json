@@ -1,0 +1,148 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.24.0",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "e64d39ed83791ed85a96f01b343622e9",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"downloading-the-whole-xit001-corpus\">Downloading the whole XIT001 corpus</h1>\n<span class=\"paragraph\">Notebook 01 pulled one prefecture-quarter at a time. To train anything we want\nthe lot on disk, fetched once, so every later experiment is an offline\noperation on a local file.</span>\n<span class=\"paragraph\">The good news is that \"the lot\" is small:</span>\n<table>\n<thead>\n<tr>\n<th></th>\n<th></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>Rows nationwide, 2005 Q3 \u2013 2026 Q1</td>\n<td><strong>~6.4M</strong></td>\n</tr>\n<tr>\n<td>Requests needed</td>\n<td><strong>3,901</strong> (47 prefectures \u00d7 83 quarters)</td>\n</tr>\n<tr>\n<td>Wall time, sequential</td>\n<td><strong>~12 min</strong></td>\n</tr>\n<tr>\n<td>On disk, parquet + zstd</td>\n<td><strong>~80 MB</strong></td>\n</tr>\n</tbody>\n</table>\n<span class=\"paragraph\">That last number is why this is easy. The same data as JSON would be ~4.5 GB;\nparquet's dictionary encoding compresses these highly repetitive strings about\n65\u00d7. There is no need to sample, scope to a region, or build incremental-update\nmachinery \u2014 just download everything and filter locally.</span>\n<span class=\"paragraph\"><strong>This notebook stops at the raw download.</strong> Responses land on disk exactly as\nthe API returned them: every value still a string, <code>9999</code> sentinels intact,\n<code>\u6226\u524d</code> intact, both price sources mixed together. Cleaning is deliberately a\nseparate step, so that a change of mind about cleaning never costs a re-download.</span>\n<span class=\"paragraph\">In particular there is <strong>no <code>priceClassification</code> filter</strong>, so both populations\nare kept \u2014 \u4e0d\u52d5\u7523\u53d6\u5f15\u4fa1\u683c\u60c5\u5831 (the buyer survey, 2005 Q3+) and \u6210\u7d04\u4fa1\u683c\u60c5\u5831\n(REINS broker data, 2021 Q1+) \u2014 with <code>PriceCategory</code> preserved so they can be\nseparated later.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "a9f6178a4d9aa36eba9fca9230b467f0",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "f231a6ac87e56fff6ce983a5b896af72",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"the-request-grid\">The request grid</h2>\n<span class=\"paragraph\">One request is one <code>(prefecture, year, quarter)</code> cell. Two things fix the shape\nof the grid:</span>\n<span class=\"paragraph\"><strong>Prefecture is the right granularity.</strong> <code>XIT001</code> accepts <code>area</code> (prefecture),\n<code>city</code> or <code>station</code>, and a prefecture query returns everything the municipality\nqueries would. Checked directly: Tottori 2024 Q1 returns 381 rows via\n<code>area=31</code>, and 381 rows via summing all 19 of its <code>city=</code> calls. Fetching by\nmunicipality would mean ~1,900 requests per quarter instead of 47, for\nidentical data.</span>\n<span class=\"paragraph\"><strong>The series starts at 2005 Q3, not 2005 Q1.</strong> Asking for 2005 Q1 or Q2 returns\nHTTP 400 (<code>'year'\u3001'quarter'\u306e\u7d44\u307f\u5408\u308f\u305b\u304c\u4e0d\u6b63\u3067\u3059\u3002</code>). The grid skips them\nrather than fetching and failing.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "c71d53ec9c72e38d62c7bcda3571a439",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "97fb61ca0cd3a99fdbe623e6a9cc62fa",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "8ce7de9588d0b4c15b4349ffd49e8e99",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"three-response-shapes-not-one\">Three response shapes, not one</h2>\n<span class=\"paragraph\">This is the part that a naive loop gets wrong. <code>XIT001</code> answers in three\ndifferent ways, and only the first is a success:</span>\n<table>\n<thead>\n<tr>\n<th>Status</th>\n<th>Body</th>\n<th>Means</th>\n<th>What to do</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>200</code></td>\n<td><code>{\"status\":\"OK\",\"data\":[\u2026]}</code></td>\n<td>rows</td>\n<td>write them</td>\n</tr>\n<tr>\n<td><code>404</code></td>\n<td><code>{\"message\":\"\u691c\u7d22\u7d50\u679c\u304c\u3042\u308a\u307e\u305b\u3093\u3002\"}</code></td>\n<td><strong>legitimately empty</strong></td>\n<td>write an empty file</td>\n</tr>\n<tr>\n<td><code>400</code></td>\n<td><code>{\"message\":{\"insufficient\":\u2026}}</code></td>\n<td>bad parameters</td>\n<td>raise \u2014 the grid has a bug</td>\n</tr>\n</tbody>\n</table>\n<span class=\"paragraph\">Note the 404. A prefecture-quarter with no recorded transactions is <em>not</em> an\nerror, but it does not come back as <code>{\"data\": []}</code> either \u2014 it comes back as a\n404 with no <code>data</code> key at all. Notebook 01's client calls <code>raise_for_status()</code>\nand would blow up on those; it only gets away with it because it never asks for\nan empty cell.</span>\n<span class=\"paragraph\">Caching the empties matters too. If an empty cell writes nothing, every re-run\nre-requests every empty cell forever, and \"resume\" stops being cheap.</span>\n<span class=\"paragraph\">Everything else \u2014 timeouts, <code>429</code>, <code>5xx</code> \u2014 is transient and gets retried with\nbackoff.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "62e8d4266a7be7cf3beae5d623fae6ff",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "1cc6767adf48ced53892d8f121467cba",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"where-it-goes-on-disk\">Where it goes on disk</h2>\n<span class=\"paragraph\">One file per grid cell, named <code>{year}Q{quarter}_{area}.parquet</code>. The presence of\nthe file <em>is</em> the cache: the loop skips any cell that already has one, which\nmakes the download interruptible and a resume nearly free.</span>\n<h3 id=\"why-not-hive-partitioning\">Why not Hive partitioning</h3>\n<span class=\"paragraph\">The obvious layout is <code>year=2024/quarter=1/area=13/\u2026</code>, which readers understand\nnatively. It is a trap here. Partition values are type-inferred, so <code>area=01</code>\nreads back as the integer <code>1</code> \u2014 <strong>silently destroying the leading zero on\nprefecture codes 01\u201309</strong>, from Hokkaido through Fukui. You would not notice\nuntil a join against municipality codes quietly dropped nine prefectures.</span>\n<span class=\"paragraph\">Flat filenames plus explicit string columns avoid the whole problem. The\npartitioning would have bought query pruning, which is worth nothing on an 80 MB\ndataset that reads in about two seconds.</span>\n<span class=\"paragraph\">So each file carries three ingest-metadata columns \u2014 <code>_area</code>, <code>_year</code>,\n<code>_quarter</code>, underscore-prefixed to distinguish them from the API's own 29\nfields, all stored as strings.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "9b1b1d3a793e345a8377acf16f7e3900",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "33588daa3ab40f5641187ffde799e7a2",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"running-it\">Running it</h2>\n<span class=\"paragraph\">A twelve-minute loop needs care in a reactive notebook: marimo re-runs a cell\nwhenever anything it depends on changes, and a download that restarts every time\nyou touch a slider would be unusable. The button below is the guard \u2014 the loop\nbody runs only when it is clicked, never on a reactive re-run.</span>\n<span class=\"paragraph\">One refinement on pure skip-if-exists: <strong>the most recent four quarters are\nalways re-fetched.</strong> Recent quarters keep gaining rows for months as survey\nresponses trickle in, so a cached copy of a fresh quarter goes stale in a way\nthat a settled quarter never does.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "426e5e8f541a566e2b49c1b72e7b6b31",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "33df3a412b0093031a590c4075c59584",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "4f2aa985fbc6d5b8b57c4b6812bcc5ab",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"checking-what-landed\">Checking what landed</h2>\n<span class=\"paragraph\">Reading the flat tree back is one call. The per-year counts are the real\nintegrity check \u2014 they should show the scheme ramping up through 2006, settling\naround 70\u201380k rows a quarter, then jumping in 2021 when the REINS contract-price\nfeed switches on.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "f2d515952a7426370c1b9119e664a696",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "59ae734650d18df0617993d0e97bec0d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"whats-next\">What's next</h2>\n<span class=\"paragraph\">The corpus on disk is deliberately raw, which means every trap from notebook 01\nis still in it. The next step is a proper cleaning layer, and this is the list it\nhas to deal with:</span>\n<ul>\n<li><strong>Everything is a string</strong>, with <code>\"\"</code> for missing rather than null.</li>\n<li><strong><code>Area</code> / <code>TotalFloorArea</code> of <code>9999</code></strong> is a censored value meaning\n  \"\u22655,000 m\u00b2\", not a measurement.</li>\n<li><strong><code>BuildingYear</code> of <code>\u6226\u524d</code></strong> \u2014 a literal string sitting in a numeric field.</li>\n<li><strong><code>Period</code></strong> needs parsing into a sortable year/quarter.</li>\n<li><strong>Two populations in one file.</strong> <code>PriceCategory</code> separates the buyer survey\n  from the REINS broker data. They are not interchangeable: for Tokyo condos in\n  2024 the broker rows show a 46% higher median price but a 12% <em>lower</em> median\n  price per m\u00b2, because they sample larger units. They also populate different\n  fields \u2014 <code>CoverageRatio</code> is 99% filled in the survey data and 18% in REINS \u2014\n  so a model trained on the pool can infer the data source and use it as a\n  shortcut.</li>\n<li><strong>2006 is thin</strong> (~19k rows in Q2 against ~64k in 2007) because the scheme was\n  still ramping up. Probably worth dropping.</li>\n</ul>\n<span class=\"paragraph\">That work belongs in <code>src/jp_housing_pred/</code>, as an importable module rather than\nnotebook cells \u2014 which is the next thing to build.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
