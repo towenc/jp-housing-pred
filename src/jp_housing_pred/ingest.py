@@ -1,13 +1,15 @@
 """
 Raw ingestion for the MLIT Real Estate Information Library 不動産情報ライブラリ
-
 """
 
 from dotenv import load_dotenv
 import os
 import requests
-# Constants
+import time
+import gzip
+import json
 
+# Constants
 load_dotenv()
 BASE_URL = os.environ["MLIT_URL"]
 API_KEY = os.environ["MLIT_API_KEY"]
@@ -15,7 +17,7 @@ API_KEY_HEADER = "Ocp-Apim-Subscription-Key"
 
 # Earliest published quarter is 2005 Q3
 EARLIEST = (2005, 3)
-
+END = (2005, 4)
 # Codes for Prefectures are strings from 01 to 47
 PREFECTURES = tuple(f"{i:02d}" for i in range(1, 48))
 
@@ -39,17 +41,49 @@ def request_one(pref, year, quarter):
     body = response.json()
     return body["data"]
     
+def save_records(records, filename):
+    folder = os.path.dirname(filename)
+    os.makedirs(folder, exist_ok=True)
 
-data = request_one("01", 2010, 3)
-print(data)
+    with gzip.open(filename, "wt", encoding="utf-8") as f:
+        for record in records:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
-# response = httpx.get(
-#     "https://www.reinfolib.mlit.go.jp/ex-api/external/XIT001",
-#     params={"year": 2024, "quarter": 1, "area": "13"},
-#     headers={"Ocp-Apim-Subscription-Key": os.environ["MLIT_API_KEY"]},
-#     timeout=60.0,
-# )
+def log(pref, year, quarter, count):
+    os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+    line = f"{pref},{year},{quarter},{count},{time.strftime('%Y-%m-%d %H:%M:%S')}"
 
-# print("status:", response.status_code)
-# print("rows:", len(response.json()["data"]))
-# print("first row:", response.json()["data"][0])
+    with open(f"{OUTPUT_FOLDER}/download_log.csv", "a", encoding="utf-8") as f:
+        f.write(line + "\n")
+
+def main():
+    start_year, start_quarter = EARLIEST
+    end_year, end_quarter = END
+    for pref in PREFECTURES:
+        for year in range(start_year, end_year + 1):
+            for quarter in range(1, 5):
+                
+                if (year, quarter) < EARLIEST:
+                    continue
+                if (year, quarter) > END:
+                    continue
+
+                # Build filename for records
+                filename = make_filename(pref, year, quarter)
+                # Skips filenames that already exist to save API calls
+                if os.path.exists(filename):
+                    continue
+                
+                records = request_one(pref, year, quarter)
+                save_records(records, filename)
+                log(pref, year, quarter, len(records)) 
+
+                time.sleep(1)   
+
+if __name__ == "__main__":
+    main()
+    
+
+
+
+

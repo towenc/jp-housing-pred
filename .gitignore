@@ -3,3 +3,6 @@
 .env
 data/
 __pycache__/
+__marimo__
+.pytest_cache
+.ruff_cache
