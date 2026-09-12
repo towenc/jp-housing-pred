@@ -8,6 +8,7 @@ import requests
 import time
 import gzip
 import json
+from datetime import datetime
 
 # Constants
 load_dotenv()
@@ -17,18 +18,21 @@ API_KEY_HEADER = "Ocp-Apim-Subscription-Key"
 
 # Earliest published quarter is 2005 Q3
 EARLIEST = (2005, 3)
-END = (2005, 4)
+now = datetime.now()
+END = (now.year, (now.month - 1) // 3 + 1)
+
 # Codes for Prefectures are strings from 01 to 47
 PREFECTURES = tuple(f"{i:02d}" for i in range(1, 48))
 
 OUTPUT_FOLDER = "data/raw"
 
 def make_filename(pref, year, quarter):
-    """Build the path where one chunk of data gets saved."""
+    """Build the path where data for one group of records gets saved."""
     folder = OUTPUT_FOLDER + "/pref=" + pref + "/year=" + str(year)
     return folder + "/quarter=" + str(quarter) + ".json.gz"  
 
 def request_one(pref, year, quarter):
+    """Requests one group of records from the MLIT API."""
     headers = {API_KEY_HEADER: API_KEY}
     params = {"area": pref, "year": str(year), "quarter": str(quarter)}
 
@@ -42,6 +46,7 @@ def request_one(pref, year, quarter):
     return body["data"]
     
 def save_records(records, filename):
+    """Saves the records to specified file name"""
     folder = os.path.dirname(filename)
     os.makedirs(folder, exist_ok=True)
 
@@ -50,6 +55,7 @@ def save_records(records, filename):
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 def log(pref, year, quarter, count):
+    """Logs the downloads in download_log.csv"""
     os.makedirs(OUTPUT_FOLDER, exist_ok=True)
     line = f"{pref},{year},{quarter},{count},{time.strftime('%Y-%m-%d %H:%M:%S')}"
 
@@ -75,7 +81,11 @@ def main():
                     continue
                 
                 records = request_one(pref, year, quarter)
-                save_records(records, filename)
+
+                if records:
+                    save_records(records, filename)
+                    print(f"pref={pref}, year={year}, quarter={quarter} successfully downloaded.")
+                
                 log(pref, year, quarter, len(records)) 
 
                 time.sleep(1)   
