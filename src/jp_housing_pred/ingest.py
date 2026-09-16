@@ -24,6 +24,10 @@ END = (now.year, (now.month - 1) // 3 + 1)
 # Codes for Prefectures are strings from 01 to 47
 PREFECTURES = tuple(f"{i:02d}" for i in range(1, 48))
 
+# No. of times to retry API when faced with some error
+MAX_RETRIES = 10
+RETRYABLE = frozenset({429, 500, 502, 503, 504})
+
 OUTPUT_FOLDER = "data/raw"
 
 def make_filename(pref, year, quarter):
@@ -36,15 +40,25 @@ def request_one(pref, year, quarter):
     headers = {API_KEY_HEADER: API_KEY}
     params = {"area": pref, "year": str(year), "quarter": str(quarter)}
 
-    response = requests.get(BASE_URL + "/XIT001", headers=headers, params=params, timeout=60)
-    if response.status_code == 404:
-        return []
-    if response.status_code != 200:
-        raise Exception(f"API returned {response.status_code} for {params}")
-    
-    body = response.json()
-    return body["data"]
-    
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = requests.get(BASE_URL + "/XIT001", headers=headers, params=params, timeout=60)
+        except (requests.Timeout, requests.ConnectionError) as e:
+            reason = type(e).__name__
+            print(f"{reason} for {params}. Retrying...")
+        else:
+            if response.status_code == 200:
+                return response.json()["data"]
+            if response.status_code == 404:
+                return []
+            if response.status_code not in RETRYABLE:
+                raise RuntimeError(f"API returned {response.status_code} for {params}")
+                reason = f"HTTP {response.status_code}"
+        print(f"attempt {attempt + 1}/{MAX_RETRIES}...")
+        time.sleep(10)
+
+    raise RuntimeError(f"Failed to get a valid response for {params} after {MAX_RETRIES} attempts")
+
 def save_records(records, filename):
     """Saves the records to specified file name"""
     folder = os.path.dirname(filename)
@@ -79,8 +93,13 @@ def main():
                 # Skips filenames that already exist to save API calls
                 if os.path.exists(filename):
                     continue
-                
-                records = request_one(pref, year, quarter)
+
+                try:
+                    records = request_one(pref, year, quarter)
+                except RuntimeError as e:
+                    print(e)
+                    log(pref, year, quarter, "FAILED")
+                    continue
 
                 if records:
                     save_records(records, filename)
@@ -92,8 +111,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
-
-
-
-
