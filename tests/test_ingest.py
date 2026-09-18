@@ -15,8 +15,9 @@ def test_make_filename():
     result = ingest.make_filename(pref, year, quarter)
 
     # Assert
-    expected = "data/raw/pref=13/year=2005/quarter=3.json.gz"
+    expected = ingest.PROJECT_ROOT / "data/raw/pref=13/year=2005/quarter=3.json.gz"
     assert result == expected, f"Filename path mismatch. Expected '{expected}', got '{result}'"
+    assert result.is_absolute(), f"File path is not absolute."
 
 # ------------ request_one() ------------
 def fake_response(status_code, body=None):

@@ -9,12 +9,17 @@ import time
 import gzip
 import json
 from datetime import datetime
+from pathlib import Path
 
 # Constants
 load_dotenv()
 BASE_URL = os.environ["MLIT_URL"]
 API_KEY = os.environ["MLIT_API_KEY"]
 API_KEY_HEADER = "Ocp-Apim-Subscription-Key"
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+OUTPUT_FOLDER = PROJECT_ROOT / "data" / "raw"
+
 
 # Earliest published quarter is 2005 Q3
 EARLIEST = (2005, 3)
@@ -28,12 +33,9 @@ PREFECTURES = tuple(f"{i:02d}" for i in range(1, 48))
 MAX_RETRIES = 10
 RETRYABLE = frozenset({429, 500, 502, 503, 504})
 
-OUTPUT_FOLDER = "data/raw"
-
 def make_filename(pref, year, quarter):
     """Build the path where data for one group of records gets saved."""
-    folder = OUTPUT_FOLDER + "/pref=" + pref + "/year=" + str(year)
-    return folder + "/quarter=" + str(quarter) + ".json.gz"  
+    return OUTPUT_FOLDER / f"pref={pref}" / f"year={year}" / f"quarter={quarter}.json.gz"
 
 def request_one(pref, year, quarter):
     """Requests one group of records from the MLIT API."""
@@ -61,8 +63,8 @@ def request_one(pref, year, quarter):
 
 def save_records(records, filename):
     """Saves the records to specified file name"""
-    folder = os.path.dirname(filename)
-    os.makedirs(folder, exist_ok=True)
+    filename = Path(filename)
+    filename.parent.mkdir(parents=True, exist_ok=True)
 
     with gzip.open(filename, "wt", encoding="utf-8") as f:
         for record in records:
@@ -70,10 +72,10 @@ def save_records(records, filename):
 
 def log(pref, year, quarter, count):
     """Logs the downloads in download_log.csv"""
-    os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+    OUTPUT_FOLDER.mkdir(parents=True, exist_ok=True)
     line = f"{pref},{year},{quarter},{count},{time.strftime('%Y-%m-%d %H:%M:%S')}"
 
-    with open(f"{OUTPUT_FOLDER}/download_log.csv", "a", encoding="utf-8") as f:
+    with open(OUTPUT_FOLDER / "download_log.csv", "a", encoding="utf-8") as f:
         f.write(line + "\n")
 
 def main():
