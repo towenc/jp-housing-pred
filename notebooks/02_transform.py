@@ -26,55 +26,96 @@ def _():
     import pyarrow as pa
     import pyarrow.json as pa_json
     import pyarrow.dataset as ds
+    import pyarrow.compute as pc
 
     RAW_FOLDER = Path(__file__).resolve().parents[1] / "data" / "raw"
-    sample_path = RAW_FOLDER / "pref=30" / "year=2026" / "quarter=1.json.gz"
-    return RAW_FOLDER, ds, mo, pa_json, sample_path
+    sample_path = RAW_FOLDER / "pref=13" / "year=2023" / "quarter=1" / "data.json.gz"
+    return RAW_FOLDER, ds, mo, pa, pc
 
 
 @app.cell
-def read_sample(pa_json, sample_path):
-    table = pa_json.read_json(sample_path)
+def _(RAW_FOLDER, ds, pa):
+    part = ds.partitioning(
+        pa.schema([
+            ("pref", pa.string()),
+            ("year", pa.int16()),
+            ("quarter", pa.int8())
+        ]),
+        flavor="hive"
+    )
+
+    data = ds.dataset(
+        RAW_FOLDER,
+        format="json",
+        partitioning=part,
+    )
+    table = data.to_table(filter=ds.field("pref") == "13")
+    #table.schema
+    data.head(5)
     return (table,)
 
 
-@app.cell
-def _():
-    # Your turn: inspect `table`.
-    #   - how many rows?
-    #   - what's the schema? (look at the types of TradePrice, Area, BuildingYear)
-    #   - peek at the first 3 rows as Python dicts
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Data Check
+    """)
+    return
 
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Check Numeric Columns
+    """)
     return
 
 
 @app.cell
-def _(table):
-    table.schema
+def _(pc, table):
+    numeric_cols = ["TradePrice", "Area", "TotalFloorArea", "Frontage", "BuildingYear"]
+
+    for col_name in numeric_cols:
+        col = table[col_name]
+
+        is_number = pc.match_substring_regex(col, r"^[0-9]+(\.[0-9]+)?$")
+        not_number = pc.invert(is_number)
+        bad_values = pc.filter(col, not_number)
+
+        print(col_name, len(bad_values))
+        print(pc.value_counts(bad_values).to_pylist()[:10])
+
+    buildingyear_values = pc.match_substring_regex(table["BuildingYear"], r"^([0-9]{4}年)?$")
+    not_valid = pc.invert(buildingyear_values)
+    bad_values = pc.filter(table["BuildingYear"], not_valid)
+
+    print(pc.value_counts(bad_values).to_pylist()[:10])
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    TotalFloorArea and Frontage have missing values as empty strings.
+
+    BuildingYear have 年 attached to the values and also 戦前 values.
+    """)
     return
 
 
 @app.cell
-def _(table):
-    table.num_rows
-    return
-
-
-@app.cell
-def _(table):
-    table.slice(0, 3).to_pylist()
-    return
-
-
-@app.cell
-def _(RAW_FOLDER, ds):
-    pref30 = ds.dataset(
-        RAW_FOLDER / "pref=30",
-        format="json",
-        partitioning="hive",
-    )
-    pref30_table = pref30.to_table()
-    pref30_table.schema
+def _(pa, pc, table):
+    missing = pa.table({
+        "column": table.column_names,
+        "empty_string": [
+            pc.sum(pc.equal(table[c], "")).as_py() or 0
+            if pa.types.is_string(table[c].type) else 0
+            for c in table.column_names
+        ],
+        "null": [table[c].null_count for c in table.column_names],
+        
+    })
+    missing
     return
 
 
