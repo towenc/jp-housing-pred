@@ -37,7 +37,7 @@ RETRYABLE = frozenset({429, 500, 502, 503, 504})
 
 def make_filename(pref, year, quarter):
     """Build the path where data for one group of records gets saved."""
-    return OUTPUT_FOLDER / f"pref={pref}" / f"year={year}" / f"quarter={quarter}.json.gz"
+    return OUTPUT_FOLDER / f"pref={pref}" / f"year={year}" / f"quarter={quarter}" / "data.json.gz"
 
 def request_one(pref, year, quarter):
     """Requests one group of records from the MLIT API.
