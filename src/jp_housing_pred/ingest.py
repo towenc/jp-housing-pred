@@ -23,6 +23,8 @@ OUTPUT_FOLDER = PROJECT_ROOT / "data" / "raw"
 
 # Earliest published quarter is 2005 Q3
 EARLIEST = (2005, 3)
+
+# Default to current quarter
 now = datetime.now()
 END = (now.year, (now.month - 1) // 3 + 1)
 
@@ -35,10 +37,12 @@ RETRYABLE = frozenset({429, 500, 502, 503, 504})
 
 def make_filename(pref, year, quarter):
     """Build the path where data for one group of records gets saved."""
-    return OUTPUT_FOLDER / f"pref={pref}" / f"year={year}" / f"quarter={quarter}.json.gz"
+    return OUTPUT_FOLDER / f"pref={pref}" / f"year={year}" / f"quarter={quarter}" / "data.json.gz"
 
 def request_one(pref, year, quarter):
-    """Requests one group of records from the MLIT API."""
+    """Requests one group of records from the MLIT API.
+        One group of records is data for 1 prefecture for 1 quarter.
+    """
     headers = {API_KEY_HEADER: API_KEY}
     params = {"area": pref, "year": str(year), "quarter": str(quarter)}
 
@@ -55,7 +59,7 @@ def request_one(pref, year, quarter):
                 return []
             if response.status_code not in RETRYABLE:
                 raise RuntimeError(f"API returned {response.status_code} for {params}")
-                reason = f"HTTP {response.status_code}"
+            reason = f"HTTP {response.status_code}"
         print(f"attempt {attempt + 1}/{MAX_RETRIES}...")
         time.sleep(10)
 
