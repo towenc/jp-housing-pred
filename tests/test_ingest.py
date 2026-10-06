@@ -125,7 +125,8 @@ def test_save_records(tmp_path):
 
 def test_log_appends(tmp_path, monkeypatch):
     # Arrange
-    monkeypatch.setattr(ingest, "OUTPUT_FOLDER", tmp_path)
+    log_file = tmp_path / "download_log.csv"
+    monkeypatch.setattr(ingest, "LOG_FILE", log_file)
 
     # Act
     ingest.log("13", 2024, 1, 100)
