@@ -121,21 +121,21 @@ def test_save_records(tmp_path):
     
     assert loaded == records, f"Records are different after saving. Expected '{records}', got '{loaded}'"
 
-    # ------------ log() ------------
+# ------------ log() ------------
 
-    def test_log_appends(tmp_path, monkeypatch):
-        # Arrange
-        monkeypatch.setattr(ingest, "OUTPUT_FOLDER", str(tmp_path))
+def test_log_appends(tmp_path, monkeypatch):
+    # Arrange
+    monkeypatch.setattr(ingest, "OUTPUT_FOLDER", tmp_path)
 
-        # Act
-        ingest.log("13", 2024, 1, 100)
-        ingest.log("13", 2024, 2, 0)
+    # Act
+    ingest.log("13", 2024, 1, 100)
+    ingest.log("13", 2024, 2, 0)
 
-        # Assert
-        with open(tmp_path / "download_log.csv", encoding="utf-8") as f:
-            lines = f.read().splitlines()
-        
-        assert len(lines) == 2
-        assert lines[0].startswith("13,2024,1,100,")
-        assert lines[1].startswith("13,2024,2,0,")
- 
+    # Assert
+    with open(tmp_path / "download_log.csv", encoding="utf-8") as f:
+        lines = f.read().splitlines()
+    
+    assert len(lines) == 2
+    assert lines[0].startswith("13,2024,1,100,")
+    assert lines[1].startswith("13,2024,2,0,")
+
