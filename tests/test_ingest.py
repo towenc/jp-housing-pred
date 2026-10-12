@@ -122,7 +122,6 @@ def test_save_records(tmp_path):
     assert loaded == records, f"Records are different after saving. Expected '{records}', got '{loaded}'"
 
 # ------------ log() ------------
-
 def test_log_appends(tmp_path, monkeypatch):
     # Arrange
     log_file = tmp_path / "download_log.csv"
