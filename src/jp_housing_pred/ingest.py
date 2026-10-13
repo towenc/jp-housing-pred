@@ -19,7 +19,7 @@ API_KEY_HEADER = "Ocp-Apim-Subscription-Key"
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_FOLDER = PROJECT_ROOT / "data" / "raw"
-
+LOG_FILE = OUTPUT_FOLDER.parent / "download_log.csv"
 
 # Earliest published quarter is 2005 Q3
 EARLIEST = (2005, 3)
@@ -76,10 +76,10 @@ def save_records(records, filename):
 
 def log(pref, year, quarter, count):
     """Logs the downloads in download_log.csv"""
-    OUTPUT_FOLDER.mkdir(parents=True, exist_ok=True)
+    LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
     line = f"{pref},{year},{quarter},{count},{time.strftime('%Y-%m-%d %H:%M:%S')}"
 
-    with open(OUTPUT_FOLDER / "download_log.csv", "a", encoding="utf-8") as f:
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(line + "\n")
 
 def main():
