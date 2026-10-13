@@ -88,8 +88,8 @@ def empty_strings_to_null(table: pa.Table) -> pa.Table:
     return table
 
 def normalize_text(table: pa.Table) -> pa.Table:
-    """Normalize text where full-width ３ＬＤＫ -> 3LDK,
-    and decomposed kana (ひ + ゛) -> composed (び)"""
+    """Normalize full-width text to half-width, e.g. ３ＬＤＫ -> 3LDK, 第２種 -> 第2種.
+    Note: Arrow's NFKC doesn't recompose kana (ひ + U+3099 stays split); MLIT data has none."""
     for idx, field in enumerate(table.schema):
         if pa.types.is_string(field.type):
             normalized = pc.utf8_normalize(table[field.name], form="NFKC")
@@ -139,8 +139,8 @@ def bronze_to_silver(bronze_folder: Path, output_folder: Path) -> None:
     )
 
 if __name__ == "__main__":
-    print("Raw Data -> Bronze Conversion")
+    print("Raw Data -> Bronze Conversion...")
     raw_to_bronze(RAW_FOLDER, OUTPUT_FOLDER)
-    print("Bronze -> Silver Conversion")
+    print("Bronze -> Silver Conversion...")
     bronze_to_silver(OUTPUT_FOLDER, SILVER_FOLDER)
-    
+    print("Done.")
