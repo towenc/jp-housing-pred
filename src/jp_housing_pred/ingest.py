@@ -12,9 +12,6 @@ from datetime import datetime
 from pathlib import Path
 
 # Constants
-load_dotenv()
-BASE_URL = os.environ["MLIT_URL"]
-API_KEY = os.environ["MLIT_API_KEY"]
 API_KEY_HEADER = "Ocp-Apim-Subscription-Key"
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -43,12 +40,13 @@ def request_one(pref, year, quarter):
     """Requests one group of records from the MLIT API.
         One group of records is data for 1 prefecture for 1 quarter.
     """
-    headers = {API_KEY_HEADER: API_KEY}
+    base_url = os.environ["MLIT_URL"]
+    headers  = {API_KEY_HEADER: os.environ["MLIT_API_KEY"]}
     params = {"area": pref, "year": str(year), "quarter": str(quarter)}
 
     for attempt in range(MAX_RETRIES):
         try:
-            response = requests.get(BASE_URL + "/XIT001", headers=headers, params=params, timeout=60)
+            response = requests.get(base_url + "/XIT001", headers=headers, params=params, timeout=60)
         except (requests.Timeout, requests.ConnectionError) as e:
             reason = type(e).__name__
             print(f"{reason} for {params}. Retrying...")
@@ -116,4 +114,5 @@ def main():
                 time.sleep(1)   
 
 if __name__ == "__main__":
+    load_dotenv()
     main()

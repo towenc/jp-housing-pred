@@ -32,6 +32,8 @@ def fake_response(status_code, body=None):
 )
 def test_request_one_returns_data(monkeypatch, status_code, body, expected):
     # Arrange
+    monkeypatch.setenv("MLIT_URL", "https://example.test")
+    monkeypatch.setenv("MLIT_API_KEY", "fake-key")
     monkeypatch.setattr(ingest.requests, "get", lambda url, **kwargs: fake_response(status_code, body))
 
     # Act
