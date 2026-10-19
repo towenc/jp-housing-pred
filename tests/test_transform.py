@@ -1,6 +1,8 @@
-from jp_housing_pred import ingest, transform
 import pyarrow as pa
 import pyarrow.dataset as ds
+
+from jp_housing_pred import ingest, transform
+
 
 # ------------ raw_to_bronze() ------------
 def write_raw(raw_folder, pref, year, quarter, records):

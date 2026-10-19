@@ -1,8 +1,11 @@
-from jp_housing_pred import ingest
 import gzip
 import json
 from types import SimpleNamespace
+
 import pytest
+
+from jp_housing_pred import ingest
+
 
 # ------------ make_filename() ------------
 def test_make_filename():
@@ -17,7 +20,7 @@ def test_make_filename():
     # Assert
     expected = ingest.PROJECT_ROOT / "data/raw/pref=13/year=2005/quarter=3/data.json.gz"
     assert result == expected, f"Filename path mismatch. Expected '{expected}', got '{result}'"
-    assert result.is_absolute(), f"File path is not absolute."
+    assert result.is_absolute(), "File path is not absolute."
 
 # ------------ request_one() ------------
 def fake_response(status_code, body=None):

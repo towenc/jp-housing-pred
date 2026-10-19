@@ -2,14 +2,15 @@
 Raw ingestion for the MLIT Real Estate Information Library 不動産情報ライブラリ
 """
 
-from dotenv import load_dotenv
-import os
-import requests
-import time
 import gzip
 import json
+import os
+import time
 from datetime import datetime
 from pathlib import Path
+
+import requests
+from dotenv import load_dotenv
 
 # Constants
 API_KEY_HEADER = "Ocp-Apim-Subscription-Key"
@@ -81,8 +82,8 @@ def log(pref, year, quarter, count):
         f.write(line + "\n")
 
 def main():
-    start_year, start_quarter = EARLIEST
-    end_year, end_quarter = END
+    start_year, _ = EARLIEST
+    end_year, _ = END
     for pref in PREFECTURES:
         for year in range(start_year, end_year + 1):
             for quarter in range(1, 5):
