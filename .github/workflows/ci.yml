@@ -17,4 +17,8 @@ jobs:
 
       - run: uv sync --locked
 
-      - run: uv run pytest
+      - name: Lint
+        run: uv run ruff check
+        
+      - name: Test
+        run: uv run pytest
