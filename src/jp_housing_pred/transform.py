@@ -6,7 +6,6 @@ from pathlib import Path
 import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.dataset as ds
-import pyarrow.parquet as pq
 
 # ----- Constants -----
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
