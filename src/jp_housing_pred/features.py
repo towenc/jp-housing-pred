@@ -126,7 +126,7 @@ def add_age(table: pa.Table) -> pa.Table:
     Also add new_build = age <= 0. Keep the existing prewar flag.
     """
     # Append age column
-    age = pc.substact(table["year"], table["BuildingYear"])
+    age = pc.subtract(table["year"], table["BuildingYear"])
     table = table.append_column("age", age)
 
     # Filter out rows where age is null or less than -1
