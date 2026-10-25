@@ -32,8 +32,6 @@ MIN_TRADE_PRICE = 1000000
 # Area being 9999 means area is actually greater than 2000m2
 AREA_CAP = 9999.0  
 
-ODD_LAYOUTS = ["オープンフロア", "スタジオ", "メゾネット"]
-
 GOLD_COLUMNS: list[str] = ["log_price", 
                             "Type", 
                             "PriceCategory", 
@@ -43,15 +41,14 @@ GOLD_COLUMNS: list[str] = ["log_price",
                             "MunicipalityCode",
                             "DistrictCode",
                             "Region",
-                            "floor_area,
+                            "floor_area",
                             "land_area",
                             "n_rooms", "has_L", "has_D", "has_K", "has_S", "is_open_floor",
-                            "age", "new_buid", "prewar", "Structuree", "Renovation",
+                            "age", "new_buid", "prewar", "Structure", "Renovation",
                             "CityPlanning", "CoverageRatio", "FloorAreaRatio",
                             "LandShape", "Frontage", "Direction", "Classification", "Breadth"
 ]   
 
-# ----- Row filters (pa.Table -> pa.Table, fewer rows) -----
 def filter_types(table: pa.Table) -> pa.Table:
     """Keep only condos and land+building (houses)."""
     condition = pc.field("Type").isin(KEEP_TYPES)
@@ -74,7 +71,7 @@ def drop_cheap(table: pa.Table) -> pa.Table:
     return table.filter(condition)
 
 def drop_big_area(table: pa.Table) -> pa.Table:
-    """Drop rows where Area or TotalFloorArea is AREA_CHECK."""
+    """Drop rows where Area or TotalFloorArea is AREA_CAP."""
     condition = (pc.field("Area") == AREA_CAP) | (pc.field("TotalFloorArea") == AREA_CAP)
 
     condition = pc.coalesce(condition, False)
@@ -181,7 +178,19 @@ def build_gold(table: pa.Table) -> pa.Table:
 
 def silver_to_gold(silver_folder: Path, output_folder: Path) -> None:
     """Builds gold from silver batch by batch, keeping hive partitions"""
-    raise NotImplementedError
+    silver = ds.dataset(silver_folder, format="parquet", partitioning=PARTITIONING)
+
+    gold_schema = build_gold(silver.head(0)).schema
+    batches = (build_gold(batch) for batch in silver.to_batches())
+
+    ds.write_dataset(
+        batches,
+        output_folder,
+        schema=gold_schema,
+        format="parquet",
+        partitioning=PARTITIONING,
+        existing_data_behavior="delete_matching",
+    )
 
 
 if __name__ == "__main__":
