@@ -34,9 +34,22 @@ AREA_CAP = 9999.0
 
 ODD_LAYOUTS = ["オープンフロア", "スタジオ", "メゾネット"]
 
-# TODO: final column list. Remember UnitPrice / PricePerUnit are target leakage.
-GOLD_COLUMNS: list[str] = []
-
+GOLD_COLUMNS: list[str] = ["log_price", 
+                            "Type", 
+                            "PriceCategory", 
+                            "pref", 
+                            "year",
+                            "quarter",
+                            "MunicipalityCode",
+                            "DistrictCode",
+                            "Region",
+                            "floor_area,
+                            "land_area",
+                            "n_rooms", "has_L", "has_D", "has_K", "has_S", "is_open_floor",
+                            "age", "new_buid", "prewar", "Structuree", "Renovation",
+                            "CityPlanning", "CoverageRatio", "FloorAreaRatio",
+                            "LandShape", "Frontage", "Direction", "Classification", "Breadth"
+]   
 
 # ----- Row filters (pa.Table -> pa.Table, fewer rows) -----
 def filter_types(table: pa.Table) -> pa.Table:
@@ -135,13 +148,20 @@ def add_age(table: pa.Table) -> pa.Table:
     # Replaces age column with age column that is clipped -1 -> 0
     clipped = pc.max_element_wise(table["age"], 0)
     idx = table.schema.get_field_index("age")
-    table = table.set_columns(idx, "age", clipped)    
+    table = table.set_column(idx, "age", clipped)
+
+    # Add a new column to indicate new build
+    new_build = pc.equal(table["age"], 0)
+    table = table.append_column("new_build", new_build)
 
     return table
 
 def add_log_price(table: pa.Table) -> pa.Table:
-    """Add log_price, the modelling target."""
-    raise NotImplementedError
+    """Add log_price, the target."""
+    log_price = pc.ln(table["TradePrice"])
+    table = table.append_column("log_price", log_price)
+
+    return table   
 
 
 # ----- Pipeline -----
