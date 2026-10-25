@@ -44,7 +44,7 @@ GOLD_COLUMNS: list[str] = ["log_price",
                             "floor_area",
                             "land_area",
                             "n_rooms", "has_L", "has_D", "has_K", "has_S", "is_open_floor",
-                            "age", "new_buid", "prewar", "Structure", "Renovation",
+                            "age", "new_build", "prewar", "Structure", "Renovation",
                             "CityPlanning", "CoverageRatio", "FloorAreaRatio",
                             "LandShape", "Frontage", "Direction", "Classification", "Breadth"
 ]   
@@ -101,7 +101,6 @@ def drop_missing_floor_area(table: pa.Table) -> pa.Table:
 
     condition = pc.field("floor_area").is_valid()
     return table.filter(condition)
-
 
 def parse_floor_plan(table: pa.Table) -> pa.Table:
     """FloorPlan "3LDK" -> n_rooms=3, has_L/has_D/has_K/has_S booleans.
