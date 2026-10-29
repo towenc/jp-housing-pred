@@ -1,9 +1,11 @@
+import math
+
 import pyarrow as pa
 import pyarrow.dataset as ds
-import math
 import pytest
 
-from jp_housing_pred import ingest, transform, features
+from jp_housing_pred import features, transform
+
 
 # ------------ filter_types() ------------
 def test_filter_types():
