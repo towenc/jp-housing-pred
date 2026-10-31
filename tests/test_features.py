@@ -316,7 +316,8 @@ def test_silver_to_gold(tmp_path):
 
     rows = [
         make_silver_row(),
-        make_silver_row(pref="20")
+        make_silver_row(pref="20"),
+        make_silver_row(pref="22", TradePrice=999999)
     ]
     table = pa.Table.from_pylist(rows, schema=SILVER_SCHEMA)
 
@@ -330,5 +331,3 @@ def test_silver_to_gold(tmp_path):
     assert result.num_rows == 2
     assert result.column("pref").to_pylist() == ["13", "20"]
     assert sorted(result.column_names) == sorted(features.GOLD_COLUMNS)
-
-
