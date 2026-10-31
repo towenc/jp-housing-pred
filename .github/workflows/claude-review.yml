@@ -41,6 +41,8 @@ jobs:
             hand-rolled. Don't pad with praise and don't invent nitpicks; if
             there is nothing worth raising, say so in one line.
 
+            There is no need to review notebooks/ because these are notes.
+
             Use inline comments for line-specific issues, and one top-level
             PR comment (gh pr comment) for the overall summary.
           claude_args: |
