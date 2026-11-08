@@ -32,13 +32,3 @@ class GroupMean:
         groups = X[self.group].to_pylist()
         preds = [group_means.get(g, self.global_mean_) for g in groups]
         return np.array(preds)
-
-if __name__ == "__main__":
-    X = pa.table({"pref": ["13", "13", "27"]})
-    y = pa.array([10.0, 12.0, 14.0])
-
-    m = GroupMean("pref").fit(X, y)
-    preds = m.predict(X)
-    print(m.group_mean_)
-    print(m.group)
-    print(preds)
