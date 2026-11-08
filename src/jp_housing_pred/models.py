@@ -2,25 +2,43 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.compute as pc
 
+
 class GlobalMean:
+    """Simply predicts the global mean of the target variable"""
     def __init__(self):
-        self.mean = None
+        self.mean_ = None
     def fit(self, X, y):
-        self.mean = pc.mean(y).as_py()
+        self.mean_ = pc.mean(y).as_py()
         return self
     def predict(self, X):
-        return np.full(len(X), self.mean)
+        return np.full(len(X), self.mean_)
 
 class GroupMean:
+    """Predicts the mean of the target variable for each group, falling back to the global mean if the group is unseen."""
     def __init__(self, group):
         self.group = group
-        self.group_mean = None
+        self.group_mean_ = None
+        self.global_mean_ = None
     def fit(self, X, y):
         t = pa.table({self.group: X[self.group], "y": y})
-        self.group_mean = t.group_by(self.group).aggregate([("y", "mean")])
-        self.global_mean = pc.mean(y).as_py()
+        self.group_mean_ = t.group_by(self.group).aggregate([("y", "mean")])
+        self.global_mean_ = pc.mean(y).as_py()
         return self
     def predict(self, X):
-        
+        keys = self.group_mean_[self.group].to_pylist()
+        means = self.group_mean_["y_mean"].to_pylist()
+        group_means = dict(zip(keys, means))
 
+        groups = X[self.group].to_pylist()
+        preds = [group_means.get(g, self.global_mean_) for g in groups]
+        return np.array(preds)
 
+if __name__ == "__main__":
+    X = pa.table({"pref": ["13", "13", "27"]})
+    y = pa.array([10.0, 12.0, 14.0])
+
+    m = GroupMean("pref").fit(X, y)
+    preds = m.predict(X)
+    print(m.group_mean_)
+    print(m.group)
+    print(preds)

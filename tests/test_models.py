@@ -1,7 +1,9 @@
-import pyarrow as pa
 import numpy as np
-from jp_housing_pred.models import GlobalMean, GroupMean
+import pyarrow as pa
 import pytest
+
+from jp_housing_pred.models import GlobalMean, GroupMean
+
 
 @pytest.fixture
 def train_data():
