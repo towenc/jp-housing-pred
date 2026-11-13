@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.metrics import mean_absolute_error, r2_score, root_mean_squared_error
 
+
 def MdAPE(y_true, y_pred):
     """Median absolute percentage error in yen"""
     true = np.exp(y_true)
