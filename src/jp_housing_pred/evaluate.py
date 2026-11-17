@@ -24,8 +24,8 @@ METRICS = {
     "rmse": root_mean_squared_error,
     "mae": mean_absolute_error,
     "r2": r2_score,
-    "mdape": MdAPE,
-    "ppe": PPE
+    "mdape": mdape,
+    "ppe": ppe
 }
 
 def evaluate(model, train, val):

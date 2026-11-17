@@ -2,51 +2,51 @@ import numpy as np
 import pyarrow as pa
 import pytest
 
-from jp_housing_pred.evaluate import PPE, MdAPE, evaluate
+from jp_housing_pred.evaluate import ppe, mdape, evaluate
 
 
 # ------------ MdAPE ------------
-def test_MdAPE():
+def test_mdape():
     # Arrange
     y_true = np.log([60000000, 50000000, 25000000])
     y_pred = np.log([65000000, 40000000, 26000000])
 
     # Act
-    result = MdAPE(y_true, y_pred)
+    result = mdape(y_true, y_pred)
 
     # Assert
     assert result == pytest.approx(1/12)
 
-def test_MdAPE_perfect():
+def test_mdape_perfect():
     # Arrange
     y_true = np.log([60000000, 50000000, 25000000])
     y_pred = y_true
 
     # Act
-    result = MdAPE(y_true, y_pred)
+    result = mdape(y_true, y_pred)
 
     # Assert
     assert result == pytest.approx(0)
 
 # ------------ PPE ------------
-def test_PPE():
+def test_ppe():
     # Arrange
     y_true = np.log([60000000, 50000000, 25000000])
     y_pred = np.log([65000000, 40000000, 26000000])
 
     # Act
-    result = PPE(y_true, y_pred)
+    result = ppe(y_true, y_pred)
 
     # Assert
     assert result == pytest.approx(2/3)
 
-def test_PPE_perfect():
+def test_ppe_perfect():
     # Arrange
     y_true = np.log([60000000, 50000000, 25000000])
     y_pred = y_true
 
     # Act
-    result = PPE(y_true, y_pred)
+    result = ppe(y_true, y_pred)
 
     # Assert
     assert result == pytest.approx(1)
@@ -82,7 +82,7 @@ def test_evaluate():
     # check all metrics are present
     assert set(result.keys()) == {"rmse", "mae", "r2", "mdape", "ppe"}
     # check that the model did not use the target column during fitting
-    assert "log_price" not in model.fit_columns, "evaluate should not pass the target column to the model"
+    assert "log_price" not in model.fit_columns, "evaluate should not pass the target column to the modelcl"
     # check that the model evaluated on val
     assert model.predict_rows == len(val)
     # check that the model saw the correct number of training rows
