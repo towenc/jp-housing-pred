@@ -2,7 +2,7 @@ import numpy as np
 import pyarrow as pa
 import pytest
 
-from jp_housing_pred.evaluate import ppe, mdape, evaluate
+from jp_housing_pred.evaluate import evaluate, mdape, ppe
 
 
 # ------------ MdAPE ------------
