@@ -2,14 +2,14 @@ import numpy as np
 from sklearn.metrics import mean_absolute_error, r2_score, root_mean_squared_error
 
 
-def MdAPE(y_true, y_pred):
-    """Median absolute percentage error in yen"""
+def mdape(y_true, y_pred):
+    """Median absolute percentage error, in yen scale"""
     true = np.exp(y_true)
     pred = np.exp(y_pred)
 
     return np.median(np.abs(true - pred) / true)
 
-def PPE(y_true, y_pred, p = 0.1):
+def ppe(y_true, y_pred, p = 0.1):
     """Percentage of Predictions within Error
     Share of predictions within the specified error margins
     """
