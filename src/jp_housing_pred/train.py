@@ -1,10 +1,12 @@
+import sys
+
+import mlflow
+import yaml
+
 from jp_housing_pred.evaluate import evaluate
 from jp_housing_pred.features import PROJECT_ROOT
 from jp_housing_pred.models import GlobalMean, GroupMean
-from jp_housing_pred.split import load_split
-
-import sys
-import yaml
+from jp_housing_pred.split import load_split, period_range
 
 # YAML config model name -> model class
 # Add new models here as needed
@@ -32,13 +34,30 @@ def train(cfg):
     train_data = load_split(data_folder, data_cfg["train_split"])
     validation_data = load_split(data_folder, data_cfg["eval_split"])
 
-    print(f"Train split: {len(train_data)} samples")
-    print(f"Validation split: {len(validation_data)} samples")
+    periods = {
+        "train_period": period_range(train_data),
+        "validation_period": period_range(validation_data)
+    }
+
+    print(f"Train split: {len(train_data)} samples ({periods['train_period']})")
+    print(f"Validation split: {len(validation_data)} samples ({periods['validation_period']})")
+
+    mlflow.set_experiment(cfg["experiment"])
 
     for entry in cfg["models"]:
-        model = build_model(entry)
-        print(f"Training model: {entry}")
-        print(evaluate(model, train_data, validation_data))
+        with mlflow.start_run(run_name=entry["name"]):
+            model = build_model(entry)
+            metrics = evaluate(model, train_data, validation_data) 
+
+            metrics_str = ", ".join(f"{k}={v:.4f}" for k, v in metrics.items())
+            print(f"{entry['name']}: {metrics_str}")
+
+            # log parameters, metrics, and config for the current run
+            mlflow.log_params(entry)
+            mlflow.log_params(data_cfg)
+            mlflow.log_params(periods)
+            mlflow.log_metrics(metrics)
+            mlflow.log_dict(cfg, "config.yaml")
 
 def main():
     config_path = sys.argv[1]

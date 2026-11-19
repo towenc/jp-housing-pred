@@ -9,3 +9,4 @@ __marimo__
 notes/
 CLAUDE.md
 mlflow.db
+mlruns/
