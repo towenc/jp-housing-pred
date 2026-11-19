@@ -1,14 +1,14 @@
 # JP Housing Price Predictor
 
-> 🚧 Work in progress
+> Work in progress
 
 Predict the sale price of second-hand homes in Japan from public transaction records.
 
-## The idea
+## Idea
 
-Japan's Ministry of Land (MLIT, 国土交通省) publishes every reported real estate transaction since 2005 through the [Real Estate Information Library](https://www.reinfolib.mlit.go.jp/) (不動産情報ライブラリ). Each record has the price, location, floor area, building age, structure and more.
+Japan's Ministry of Land (MLIT, 国土交通省) publishes every reported real estate transaction since 2005 through the [Real Estate Information Library](https://www.reinfolib.mlit.go.jp/) (不動産情報ライブラリ). Each record has the price, location, floor area, building age, structure etc..
 
-This project turns those records into a model that answers: **"What is this property likely to sell for?"**
+This project is an ML pipeline that tries to predict what a property is likely to sell for based on MLIT data.
 
 ## Scope
 
@@ -33,12 +33,11 @@ MLIT API → raw (json.gz) → bronze (parquet) → silver (cleaned, typed) → 
 | validation | 2024         |
 | test       | 2025 onward  |
 
-**Models:** start with simple baselines, then build up.
+**Models:** 
 
-1. Global mean
-2. Mean by prefecture
-3. Mean by municipality
-4. *Next:* gradient-boosted trees on property features
+1. Global mean -> baseline
+2. Mean by prefecture -> baseline
+3. Mean by municipality -> basline
 
 **Metrics:** RMSE, MAE and R² on log price, plus two that are easier to read in yen:
 
@@ -57,3 +56,5 @@ Experiments are configured in YAML (`configs/`) and tracked with MLflow.
 - [ ] MLflow tracking
 - [ ] Feature-based models
 - [ ] Results
+- [ ] Model Serving
+- [ ] Frontend
