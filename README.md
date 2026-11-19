@@ -48,7 +48,7 @@ MLIT API → raw (json.gz) → bronze (parquet) → silver (cleaned, typed) → 
 - [x] Train / validation / test split
 - [x] Baseline models and evaluation
 - [x] Config-driven training
-- [ ] MLflow tracking
+- [x] MLflow tracking
 - [ ] Feature-based models
 - [ ] Results
 - [ ] Model Serving
