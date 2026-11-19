@@ -8,3 +8,4 @@ __marimo__
 .ruff_cache
 notes/
 CLAUDE.md
+mlflow.db
