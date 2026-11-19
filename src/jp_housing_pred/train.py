@@ -46,18 +46,22 @@ def train(cfg):
 
     for entry in cfg["models"]:
         with mlflow.start_run(run_name=entry["name"]):
+
+            # log parameters for current run before training
+            mlflow.log_params(entry)
+            mlflow.log_params(data_cfg)
+            mlflow.log_params(periods)
+            mlflow.log_dict(cfg, "config.yaml")
+
+            # build and evaluate the model
             model = build_model(entry)
             metrics = evaluate(model, train_data, validation_data) 
 
             metrics_str = ", ".join(f"{k}={v:.4f}" for k, v in metrics.items())
             print(f"{entry['name']}: {metrics_str}")
 
-            # log parameters, metrics, and config for the current run
-            mlflow.log_params(entry)
-            mlflow.log_params(data_cfg)
-            mlflow.log_params(periods)
+            # log metrics for the current run
             mlflow.log_metrics(metrics)
-            mlflow.log_dict(cfg, "config.yaml")
 
 def main():
     config_path = sys.argv[1]
