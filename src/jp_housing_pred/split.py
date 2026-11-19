@@ -36,3 +36,12 @@ def load_split(folder, split):
 
     split_info = SPLITS[split]
     return load_years(folder, start=split_info["start"], end=split_info["end"])
+
+def period_range(table):
+    """Return a string representing the period range covered by the table."""
+    years = table["year"]
+    first_year = pc.min(years).as_py()
+    last_year = pc.max(years).as_py()
+    first_q = pc.min(table.filter(pc.equal(years, first_year))["quarter"]).as_py()
+    last_q = pc.max(table.filter(pc.equal(years, last_year))["quarter"]).as_py()
+    return f"{first_year}Q{first_q} - {last_year}Q{last_q}"

@@ -4,7 +4,7 @@ import pyarrow as pa
 import pyarrow.dataset as ds
 import pytest
 
-from jp_housing_pred.split import SPLITS, load_split, load_years
+from jp_housing_pred.split import SPLITS, load_split, load_years, period_range
 from jp_housing_pred.transform import PARTITIONING
 
 
@@ -39,7 +39,7 @@ def gold_folder(tmp_path):
     ("validation", [2024]),
     ("test", [2025, 2026])
 ])
-def test_load_split(gold_folder, split,expected_years):
+def test_load_split(gold_folder, split, expected_years):
     # Act
     result = load_split(gold_folder, split)
 
@@ -77,3 +77,21 @@ def test_load_split_unknown_split(tmp_path):
     # Act & Assert
     with pytest.raises(ValueError, match="Unknown split"):
         load_split(tmp_path, "unknown")
+
+# ---------- period_range() ------------
+@pytest.mark.parametrize("year, quarter, expected", [
+    ([2025, 2026], [4, 1], "2025Q4 - 2026Q1"),
+    ([2024], [1], "2024Q1 - 2024Q1"),
+    ([2026, 2025, 2025], [2, 3, 4], "2025Q3 - 2026Q2")
+])
+def test_period_range(year, quarter, expected):
+    # Arrange
+    table = pa.table({
+        "year": year,
+        "quarter": quarter
+    })
+    # Act
+    result = period_range(table)
+
+    # Assert
+    assert result == expected

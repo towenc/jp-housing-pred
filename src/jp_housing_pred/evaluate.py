@@ -7,7 +7,7 @@ def mdape(y_true, y_pred):
     true = np.exp(y_true)
     pred = np.exp(y_pred)
 
-    return np.median(np.abs(true - pred) / true)
+    return float(np.median(np.abs(true - pred) / true))
 
 def ppe(y_true, y_pred, p = 0.1):
     """Percentage of Predictions within Error
@@ -16,7 +16,7 @@ def ppe(y_true, y_pred, p = 0.1):
     true = np.exp(y_true)
     pred = np.exp(y_pred)
 
-    return np.mean(np.abs(true - pred) / true <= p)
+    return float(np.mean(np.abs(true - pred) / true <= p))
 
 TARGET = "log_price"
 

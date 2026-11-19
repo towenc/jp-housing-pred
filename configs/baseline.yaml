@@ -1,0 +1,16 @@
+# Baseline experiment
+# Run: uv run python -m jp_housing_pred.train configs/baseline.yaml
+experiment: baseline
+
+data:
+  folder: data/gold          # relative to project root
+  train_split: train         # names from SPLITS in split.py
+  eval_split: validation     
+
+models:
+  - name: global_mean
+  - name: group_mean
+    group: pref
+  - name: group_mean
+    group: MunicipalityCode
+
