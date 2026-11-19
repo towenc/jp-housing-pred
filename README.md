@@ -39,12 +39,7 @@ MLIT API → raw (json.gz) → bronze (parquet) → silver (cleaned, typed) → 
 2. Mean by prefecture -> baseline
 3. Mean by municipality -> basline
 
-**Metrics:** RMSE, MAE and R² on log price, plus two that are easier to read in yen:
-
-- **MdAPE:** median absolute percentage error
-- **PPE10:** share of predictions within ±10% of the real price
-
-Experiments are configured in YAML (`configs/`) and tracked with MLflow.
+**Metrics:** RMSE, MAE and R² on log price, MdAPE, PPE10 
 
 ## Status
 
