@@ -90,6 +90,7 @@ def test_period_range(year, quarter, expected):
         "year": year,
         "quarter": quarter
     })
+    
     # Act
     result = period_range(table)
 
