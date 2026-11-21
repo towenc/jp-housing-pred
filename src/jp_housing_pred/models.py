@@ -1,14 +1,12 @@
-from unicodedata import numeric
 
 import numpy as np
 import pyarrow as pa
 import pyarrow.compute as pc
-
+from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import Ridge
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.compose import ColumnTransformer
 
 
 # Baselines
