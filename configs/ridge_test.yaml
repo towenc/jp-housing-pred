@@ -1,0 +1,24 @@
+# Baseline experiment
+# Run: uv run python -m jp_housing_pred.train configs/baseline.yaml
+experiment: ridge
+
+data:
+  folder: data/gold          # relative to project root
+  train_split: train         # names from SPLITS in split.py
+  eval_split: validation     
+
+models:
+  - name: ridge
+    alpha: 0.5
+    numeric: ["floor_area", "land_area", "age"]
+    categorical: ["pref", "MunicipalityCode"]
+  - name: ridge
+    alpha: 0.8
+    numeric: ["floor_area", "land_area", "age"]
+    categorical: ["pref", "MunicipalityCode"]
+  - name: ridge
+    alpha: 1.0
+    numeric: ["floor_area", "land_area", "age"]
+    categorical: ["pref", "MunicipalityCode"]
+    
+

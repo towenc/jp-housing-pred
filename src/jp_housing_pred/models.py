@@ -1,8 +1,15 @@
+
 import numpy as np
 import pyarrow as pa
 import pyarrow.compute as pc
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import Ridge
+from sklearn.pipeline import Pipeline, make_pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
+# Baselines
 class GlobalMean:
     """Simply predicts the global mean of the target variable"""
     def __init__(self):
@@ -32,3 +39,28 @@ class GroupMean:
         groups = X[self.group].to_pylist()
         preds = [group_means.get(g, self.global_mean_) for g in groups]
         return np.array(preds)
+
+def ridge(alpha=1.0, numeric=(), categorical=()):
+    """Ridge regression with preprocessing
+    
+    Args:
+        alpha (float): Regularization strength for Ridge regression.
+        numeric (tuple): Names of numeric columns to be standardized.
+        categorical (tuple): Names of categorical columns to be one-hot encoded.
+    """
+
+    numeric_steps = make_pipeline(
+        SimpleImputer(strategy="median", add_indicator=True),
+        StandardScaler(),
+    )
+    categorical_steps = OneHotEncoder(handle_unknown='ignore')
+
+    pre = ColumnTransformer([
+        ("num", numeric_steps, list(numeric)),
+        ("cat", categorical_steps, list(categorical))
+    ])
+
+    return Pipeline([
+        ("pre", pre),
+        ("ridge", Ridge(alpha=alpha))
+    ])
