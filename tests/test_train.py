@@ -2,7 +2,7 @@ import mlflow
 import pyarrow as pa
 import pytest
 
-from jp_housing_pred.models import GlobalMean, GroupMean, RidgeRegressor, LGBM
+from jp_housing_pred.models import LGBM, GlobalMean, GroupMean, RidgeRegressor
 from jp_housing_pred.train import build_model, train
 
 

@@ -2,7 +2,7 @@ import numpy as np
 import pyarrow as pa
 import pytest
 
-from jp_housing_pred.models import GlobalMean, GroupMean, RidgeRegressor, LGBM
+from jp_housing_pred.models import LGBM, GlobalMean, GroupMean, RidgeRegressor
 
 
 @pytest.fixture
