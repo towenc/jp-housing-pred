@@ -2,7 +2,7 @@ import mlflow
 import pyarrow as pa
 import pytest
 
-from jp_housing_pred.models import GlobalMean, GroupMean, RidgeRegressor
+from jp_housing_pred.models import GlobalMean, GroupMean, RidgeRegressor, LGBM
 from jp_housing_pred.train import build_model, train
 
 
@@ -96,3 +96,26 @@ def test_build_model_ridge():
 
     cols = {name: c for name, _, c in model.pipe.named_steps["pre"].transformers}
     assert cols == {"num": ["area"], "cat": ["pref"]}
+
+def test_build_model_lgbm():
+    # Arrange
+    entry = {
+        "name": "lgbm",
+        "numeric": ["floor_area", "age"],
+        "categorical": ["pref", "MunicipalityCode"],
+        "n_estimators": 50,
+        "learning_rate": 0.1,
+    }
+
+    # Act
+    model = build_model(entry)
+
+    # Assert
+    assert isinstance(model, LGBM)
+
+    params = model.pipe.named_steps["lgbm"].get_params()
+    assert params["n_estimators"] == 50
+    assert params["learning_rate"] == 0.1
+
+    cols = {name: c for name, _, c in model.pipe.named_steps["pre"].transformers}
+    assert cols == {"num": ["floor_area", "age"], "cat": ["pref", "MunicipalityCode"]}

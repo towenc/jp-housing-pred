@@ -2,7 +2,7 @@ import numpy as np
 import pyarrow as pa
 import pytest
 
-from jp_housing_pred.models import LGBM, GlobalMean, GroupMean, RidgeRegressor
+from jp_housing_pred.models import GlobalMean, GroupMean, RidgeRegressor, LGBM
 
 
 @pytest.fixture
@@ -151,7 +151,7 @@ def test_lgbm_shape(small_data):
     preds = model.predict(X)
 
     #Assert
-    assert preds.shape == (X.num_rows,)
+    assert preds.shape == (X .num_rows,)
 
 def test_lgbm_unseen_cat(small_data):
     # Arrange
@@ -162,7 +162,7 @@ def test_lgbm_unseen_cat(small_data):
     })
 
     # Act
-    model = LGBM(numeric=("area",), categorical=("pref",), verbose=-1).fit(X, y)
+    model = LGBM(numeric=("area",), categorical=("pref",), verbose=-1, min_child_samples=1, min_data_in_bin=1).fit(X, y)
     preds = model.predict(X_unseen)
 
     # Assert
@@ -177,7 +177,7 @@ def test_lgbm_nulls(small_data):
     })
 
     # Act
-    model = LGBM(numeric=("area",), categorical=("pref",), verbose=-1).fit(X, y)
+    model = LGBM(numeric=("area",), categorical=("pref",), verbose=-1, min_child_samples=1, min_data_in_bin=1).fit(X, y)
     preds = model.predict(X_null)
 
     # Assert
@@ -186,6 +186,5 @@ def test_lgbm_nulls(small_data):
 def test_lgbm_cat_idx():
     # Arrange / Act
     model = LGBM(numeric=("a", "b", "c",), categorical=("d", "e",), verbose=-1)
-    
     # Assert
     assert model.cat_idx == [3, 4]
