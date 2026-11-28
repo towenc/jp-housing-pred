@@ -2,7 +2,7 @@ import mlflow
 import pyarrow as pa
 import pytest
 
-from jp_housing_pred.models import GlobalMean, GroupMean
+from jp_housing_pred.models import LGBM, GlobalMean, GroupMean, RidgeRegressor
 from jp_housing_pred.train import build_model, train
 
 
@@ -83,3 +83,39 @@ def test_train_logs_runs_to_mlflow(tmp_path, monkeypatch):
     group_run = runs[runs["params.name"] == "group_mean"].iloc[0]
     assert group_run["metrics.rmse"] == pytest.approx(1.0)
 
+def test_build_model_ridge():
+    # Arrange
+    entry = {"name": "ridge", "alpha": 2.0, "numeric": ["area"], "categorical": ["pref"]}
+
+    # Act
+    model = build_model(entry)
+
+    # Assert
+    assert isinstance(model, RidgeRegressor)
+    assert model.pipe.named_steps["ridge"].alpha == 2.0
+
+    cols = {name: c for name, _, c in model.pipe.named_steps["pre"].transformers}
+    assert cols == {"num": ["area"], "cat": ["pref"]}
+
+def test_build_model_lgbm():
+    # Arrange
+    entry = {
+        "name": "lgbm",
+        "numeric": ["floor_area", "age"],
+        "categorical": ["pref", "MunicipalityCode"],
+        "n_estimators": 50,
+        "learning_rate": 0.1,
+    }
+
+    # Act
+    model = build_model(entry)
+
+    # Assert
+    assert isinstance(model, LGBM)
+
+    params = model.pipe.named_steps["lgbm"].get_params()
+    assert params["n_estimators"] == 50
+    assert params["learning_rate"] == 0.1
+
+    cols = {name: c for name, _, c in model.pipe.named_steps["pre"].transformers}
+    assert cols == {"num": ["floor_area", "age"], "cat": ["pref", "MunicipalityCode"]}

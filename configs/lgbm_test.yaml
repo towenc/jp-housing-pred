@@ -1,0 +1,17 @@
+# LGBM test experiment
+experiment: lgbm
+
+data:
+  folder: data/gold          # relative to project root
+  train_split: train         # names from SPLITS in split.py
+  eval_split: validation     
+
+models:
+  - name: lgbm
+    numeric: ["floor_area", "land_area", "age"]
+    categorical: ["pref", "MunicipalityCode"]
+    n_estimators: 100
+    learning_rate: 0.05
+    max_depth: 5
+    min_child_samples: 20
+

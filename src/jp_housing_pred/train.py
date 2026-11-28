@@ -5,7 +5,7 @@ import yaml
 
 from jp_housing_pred.evaluate import evaluate
 from jp_housing_pred.features import PROJECT_ROOT
-from jp_housing_pred.models import GlobalMean, GroupMean, ridge
+from jp_housing_pred.models import LGBM, GlobalMean, GroupMean, RidgeRegressor
 from jp_housing_pred.split import load_split, period_range
 
 # YAML config model name -> model class
@@ -13,7 +13,8 @@ from jp_housing_pred.split import load_split, period_range
 MODELS = {
     "global_mean": GlobalMean,
     "group_mean": GroupMean,
-    "ridge": ridge,
+    "ridge": RidgeRegressor,
+    "lgbm": LGBM,
 }
 
 def build_model(entry):
