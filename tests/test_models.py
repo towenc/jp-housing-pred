@@ -110,3 +110,33 @@ def test_ridge_nulls(ridge_data):
 
     # Assert
     assert np.all(np.isfinite(preds))
+
+def test_ridge_numeric_inputs(ridge_data):
+    # Arrange
+    X, y = ridge_data
+    X_test = pa.table({
+        "area": [50.0, 110.0],
+        "pref": ["13", "13"]
+    })
+
+    # Act
+    model = ridge(numeric=("area",), categorical=("pref",)).fit(X,y)
+    preds = model.predict(X_test)
+
+    # Assert
+    assert preds[1] > preds[0]
+
+def test_ridge_categorical_inputs(ridge_data):
+    # Arrange
+    X, y = ridge_data
+    X_test = pa.table({
+        "area": [70.0, 70.0],
+        "pref": ["27", "13"]
+    })
+
+    # Act
+    model = ridge(numeric=("area",), categorical=("pref",)).fit(X, y)
+    preds = model.predict(X_test)
+
+    # Assert
+    assert preds[0] > preds[1]

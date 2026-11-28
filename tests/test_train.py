@@ -1,6 +1,7 @@
 import mlflow
 import pyarrow as pa
 import pytest
+from sklearn.pipeline import Pipeline
 
 from jp_housing_pred.models import GlobalMean, GroupMean
 from jp_housing_pred.train import build_model, train
@@ -83,3 +84,16 @@ def test_train_logs_runs_to_mlflow(tmp_path, monkeypatch):
     group_run = runs[runs["params.name"] == "group_mean"].iloc[0]
     assert group_run["metrics.rmse"] == pytest.approx(1.0)
 
+def test_build_model_ridge():
+    # Arrange
+    entry = {"name": "ridge", "alpha": 2.0, "numeric": ["area"], "categorical": ["pref"]}
+
+    # Act
+    model = build_model(entry)
+
+    # Assert
+    assert isinstance(model, Pipeline)
+    assert model.named_steps["ridge"].alpha == 2.0
+
+    cols = {name: c for name, _, c in model.named_steps["pre"].transformers}
+    assert cols == {"num": ["area"], "cat": ["pref"]}
