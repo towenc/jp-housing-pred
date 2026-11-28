@@ -1,6 +1,5 @@
-# Baseline experiment
-# Run: uv run python -m jp_housing_pred.train configs/baseline.yaml
-experiment: ridge
+# lgbmst experiment
+experiment: lgbm
 
 data:
   folder: data/gold          # relative to project root

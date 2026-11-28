@@ -1,9 +1,8 @@
 import mlflow
 import pyarrow as pa
 import pytest
-from sklearn.pipeline import Pipeline
 
-from jp_housing_pred.models import GlobalMean, GroupMean
+from jp_housing_pred.models import GlobalMean, GroupMean, RidgeRegressor
 from jp_housing_pred.train import build_model, train
 
 
@@ -92,8 +91,8 @@ def test_build_model_ridge():
     model = build_model(entry)
 
     # Assert
-    assert isinstance(model, Pipeline)
-    assert model.named_steps["ridge"].alpha == 2.0
+    assert isinstance(model, RidgeRegressor)
+    assert model.pipe.named_steps["ridge"].alpha == 2.0
 
-    cols = {name: c for name, _, c in model.named_steps["pre"].transformers}
+    cols = {name: c for name, _, c in model.pipe.named_steps["pre"].transformers}
     assert cols == {"num": ["area"], "cat": ["pref"]}
